@@ -11,7 +11,10 @@ const state = {
     gap: 10,
     bgColor: 'transparent',
     suffix: '_combined',
-    autoScale: true
+    autoScale: true,
+    customText: '',
+    textColor: '#ffffff',
+    textBgColor: '#000000'
   }
 };
 
@@ -31,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const bgColorPicker = document.getElementById('bg-color-picker');
   const suffixInput = document.getElementById('output-suffix');
   const autoScaleCheck = document.getElementById('auto-scale');
+  const customTextInput = document.getElementById('custom-text');
+  const textColorPicker = document.getElementById('text-color-picker');
+  const textBgPicker = document.getElementById('text-bg-picker');
   const btnMerge = document.getElementById('btn-merge');
   const resultBox = document.getElementById('result-box');
   const mergedOutputImg = document.getElementById('merged-output-img');
@@ -419,6 +425,19 @@ document.addEventListener('DOMContentLoaded', () => {
     state.config.autoScale = e.target.checked;
   });
 
+  customTextInput.addEventListener('input', (e) => {
+    state.config.customText = e.target.value;
+  });
+
+  textColorPicker.addEventListener('input', (e) => {
+    state.config.textColor = e.target.value;
+  });
+
+  textBgPicker.addEventListener('input', (e) => {
+    state.config.textBgColor = e.target.value;
+  });
+
+
   // Validasi apakah tombol Gabungkan bisa diklik
   function checkValidation() {
     let isValid = false;
@@ -538,6 +557,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // Hitung area tambahan untuk teks kustom (jika ada)
+    const hasCustomText = state.config.customText && state.config.customText.trim() !== '';
+    let textAreaHeight = 0;
+    const textPadding = 20;
+    let fontSize = 0;
+
+    if (hasCustomText) {
+      // Tentukan ukuran font berdasarkan lebar canvas (responsive)
+      fontSize = Math.max(Math.floor(canvasW * 0.04), 24); // Min 24px
+      fontSize = Math.min(fontSize, 80); // Max 80px
+      textAreaHeight = fontSize + (textPadding * 2);
+      canvasH += textAreaHeight;
+    }
+
     canvas.width = canvasW;
     canvas.height = canvasH;
 
@@ -553,7 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let currentX = 0;
       imageElements.forEach((el, i) => {
         const { w, h } = renderDimensions[i];
-        const yOffset = (canvasH - h) / 2; // Rata tengah vertikal
+        const yOffset = (canvasH - textAreaHeight - h) / 2; // Rata tengah vertikal (minus text area)
         ctx.drawImage(el.img, currentX, yOffset, w, h);
         currentX += w + gap;
       });
@@ -574,7 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
       for (let i = 1; i < N; i++) {
         const { w, h } = renderDimensions[i];
         const xPos = canvasW - w - currentRightOffset;
-        const yPos = canvasH - h - gap;
+        const yPos = canvasH - textAreaHeight - h - gap; // Adjusted for text area
         
         // Gambar border tipis di sekitar overlay agar tampak terpisah
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
@@ -584,6 +617,36 @@ document.addEventListener('DOMContentLoaded', () => {
         currentRightOffset += w + gap;
       }
     }
+
+    // Gambar teks kustom di bagian bawah (jika ada)
+    if (hasCustomText) {
+      const textY = canvasH - textAreaHeight;
+      
+      // Gambar background untuk area teks
+      ctx.fillStyle = state.config.textBgColor;
+      ctx.fillRect(0, textY, canvasW, textAreaHeight);
+      
+      // Gambar teks
+      ctx.fillStyle = state.config.textColor;
+      ctx.font = `bold ${fontSize}px "Plus Jakarta Sans", Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      // Shadow untuk keterbacaan
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+      
+      ctx.fillText(state.config.customText, canvasW / 2, textY + (textAreaHeight / 2));
+      
+      // Reset shadow
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
+
 
     // Ambil hasil penggabungan dalam format Data URL (base64)
     const resultDataUrl = canvas.toDataURL('image/png');
