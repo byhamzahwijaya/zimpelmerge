@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZimpelMerge - Auto Edit & Gabung Gambar</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons (Untuk icon modern) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom Styling -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-glow"></div>
+        <i data-lucide="layers" class="logo-icon"></i>
+        <h1>Zimpel<span>Merge</span></h1>
+      </div>
+      <p class="app-subtitle">Gabungkan dua gambar secara instan & efisien</p>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="app-grid">
+      
+      <!-- Left Column: Controls & Settings -->
+      <section class="panel settings-panel">
+        <div class="panel-header">
+          <i data-lucide="sliders" class="panel-icon"></i>
+          <h2>Pengaturan Bingkai</h2>
+        </div>
+
+        <!-- Mode Selector (Tabs) -->
+        <div class="tabs-container">
+          <button class="tab-btn active" data-tab="upload-mode">
+            <i data-lucide="upload-cloud"></i> Upload File
+          </button>
+          <button class="tab-btn" data-tab="path-mode">
+            <i data-lucide="folder-open"></i> Path Lokal PC
+          </button>
+        </div>
+
+        <form id="merge-config-form">
+          <!-- Local Path Form (Hidden by default unless path mode is active) -->
+          <div id="path-inputs-group" class="form-group-wrapper hidden">
+            <div id="dynamic-path-inputs" class="form-group-wrapper">
+              <!-- Rendered dynamically by JS -->
+            </div>
+            
+            <div class="form-group checkbox-group">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="auto-save-same-dir" checked>
+                <span class="checkmark"></span>
+                <span>Simpan otomatis di direktori Gambar 1</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Layout Selection -->
+          <div class="form-group">
+            <label>Tata Letak (Layout)</label>
+            <div class="layout-selector">
+              <label class="layout-option">
+                <input type="radio" name="layout" value="horizontal" checked>
+                <div class="layout-box">
+                  <div class="layout-preview horizontal-preview">
+                    <span>1</span><span>2</span><span>...</span>
+                  </div>
+                  <span class="layout-label">Horizontal</span>
+                </div>
+              </label>
+
+              <label class="layout-option">
+                <input type="radio" name="layout" value="vertical">
+                <div class="layout-box">
+                  <div class="layout-preview vertical-preview">
+                    <span>1</span><span>2</span><span>...</span>
+                  </div>
+                  <span class="layout-label">Vertikal</span>
+                </div>
+              </label>
+
+              <label class="layout-option">
+                <input type="radio" name="layout" value="overlay">
+                <div class="layout-box">
+                  <div class="layout-preview overlay-preview">
+                    <span>1</span>
+                    <span class="overlay-badge">2</span>
+                    <span class="overlay-badge-2">...</span>
+                  </div>
+                  <span class="layout-label">Overlay (PIP)</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Adjustments: Gap & Padding -->
+          <div class="form-group">
+            <div class="slider-header">
+              <label for="gap-slider">Jarak Antar Gambar (Gap)</label>
+              <span id="gap-value">10px</span>
+            </div>
+            <input type="range" id="gap-slider" min="0" max="100" value="10" class="custom-range">
+          </div>
+
+          <!-- Background Color -->
+          <div class="form-group">
+            <label>Warna Latar Bingkai</label>
+            <div class="color-picker-group">
+              <div class="color-presets">
+                <button type="button" class="color-preset active" data-color="transparent" title="Transparan" style="background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 10px 10px; background-position: 0 0, 0 5px, 5px -5px, -5px 0;"></button>
+                <button type="button" class="color-preset" data-color="#ffffff" title="Putih" style="background-color: #ffffff; border: 1px solid #444;"></button>
+                <button type="button" class="color-preset" data-color="#000000" title="Hitam" style="background-color: #000000;"></button>
+                <button type="button" class="color-preset" data-color="#f3f4f6" title="Abu Terang" style="background-color: #f3f4f6; border: 1px solid #444;"></button>
+              </div>
+              <div class="custom-color-wrapper">
+                <input type="color" id="bg-color-picker" value="#ffffff">
+                <span>Kustom</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Output Settings -->
+          <div class="form-group">
+            <label for="output-suffix">Nama Akhiran File (Suffix)</label>
+            <div class="input-with-icon">
+              <i data-lucide="edit-3"></i>
+              <input type="text" id="output-suffix" value="_combined" placeholder="Contoh: _combined">
+            </div>
+          </div>
+
+          <!-- Image Options -->
+          <div class="form-group checkbox-group">
+            <label class="custom-checkbox">
+              <input type="checkbox" id="auto-scale" checked>
+              <span class="checkmark"></span>
+              <span>Skala otomatis agar proporsional</span>
+            </label>
+          </div>
+        </form>
+      </section>
+
+      <!-- Right Column: Interactive Sandbox & Preview -->
+      <section class="panel workspace-panel">
+        <div class="panel-header">
+          <i data-lucide="image" class="panel-icon"></i>
+          <h2>Tempat Kerja & Pratinjau</h2>
+        </div>
+
+        <!-- Drag and Drop Zone Area -->
+        <div class="drop-zones-grid" id="dropzones-container">
+          <!-- Rendered dynamically by JS -->
+        </div>
+
+        <!-- Action Button -->
+        <div class="action-bar">
+          <button type="button" id="btn-merge" class="btn btn-primary btn-glow" disabled>
+            <i data-lucide="sparkles"></i> Gabungkan Gambar
+          </button>
+        </div>
+
+        <!-- Result / Output Section -->
+        <div class="result-container hidden" id="result-box">
+          <div class="result-header">
+            <h3><i data-lucide="check-circle-2"></i> Hasil Penggabungan</h3>
+            <div class="result-actions">
+              <button type="button" id="btn-download" class="btn btn-secondary btn-sm">
+                <i data-lucide="download"></i> Download Hasil
+              </button>
+            </div>
+          </div>
+          
+          <div class="result-preview-box">
+            <div class="checkerboard-bg"></div>
+            <img src="" alt="Merged Output Preview" id="merged-output-img">
+          </div>
+
+          <div class="output-path-badge hidden" id="output-path-indicator">
+            <i data-lucide="folder-check"></i>
+            <div>
+              <span class="label">Disimpan di PC Anda:</span>
+              <span class="path-text" id="saved-path-text">D:\produk\sepatu_combined.jpg</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Notification system -->
+    <div id="notification-container" class="notification-container"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
