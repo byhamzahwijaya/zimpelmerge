@@ -1004,7 +1004,7 @@ label {
    ========================================================================== */
 .notification-container {
   position: fixed;
-  bottom: 2rem;
+  top: 2rem;
   right: 2rem;
   display: flex;
   flex-direction: column;
@@ -1055,7 +1055,7 @@ label {
 @keyframes toastIn {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.9);
+    transform: translateY(-20px) scale(0.9);
   }
   to {
     opacity: 1;
