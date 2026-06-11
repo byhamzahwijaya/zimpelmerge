@@ -781,6 +781,9 @@ label {
 }
 
 .remove-btn {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
   background-color: var(--error);
   border: none;
   color: white;
@@ -791,12 +794,19 @@ label {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform var(--transition-fast), background-color var(--transition-fast);
+  transition: transform var(--transition-fast), background-color var(--transition-fast), opacity var(--transition-fast);
   z-index: 10;
+  opacity: 0;
+  transform: translateY(-5px) scale(0.9);
+}
+
+.dropzone-card:hover .remove-btn {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .remove-btn:hover {
-  transform: scale(1.15);
+  transform: translateY(0) scale(1.15) !important;
   background-color: #ef4444dd;
 }
 

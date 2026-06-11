@@ -1,6 +1,6 @@
-// State management untuk aplikasi
 const state = {
   activeMode: 'upload-mode', // 'upload-mode' atau 'path-mode'
+  hasMerged: false, // Menandai jika hasil gabungan gambar sudah digenerate
   // Gambar disimpan dalam array dinamis (minimal 2)
   images: [
     { file: null, path: '', previewUrl: null, width: 0, height: 0, name: '' },
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
         removeFile(index);
       });
-      overlay.appendChild(removeBtn);
+      preview.appendChild(removeBtn);
       
       preview.appendChild(overlay);
       card.appendChild(preview);
@@ -224,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     card.addEventListener('drop', (e) => {
       const files = e.dataTransfer.files;
       if (files.length > 0) {
+        checkAndResetIfMerged();
         if (files.length >= 2) {
           // Jika drag banyak file sekaligus, tangani secara global
           handleMultipleFiles(files);
@@ -233,6 +234,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+  }
+
+  // Fungsi helper untuk mereset workspace jika user men-drag gambar baru setelah klik Gabungkan
+  function checkAndResetIfMerged() {
+    if (state.hasMerged) {
+      state.images = [
+        { file: null, path: '', previewUrl: null, width: 0, height: 0, name: '' },
+        { file: null, path: '', previewUrl: null, width: 0, height: 0, name: '' }
+      ];
+      state.hasMerged = false;
+      renderUI();
+      return true;
+    }
+    return false;
   }
 
   // Tangani drop global pada container dropzone
@@ -251,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dropzonesContainer.classList.remove('drag-over');
     const files = e.dataTransfer.files;
     if (files.length > 0) {
+      checkAndResetIfMerged();
       handleMultipleFiles(files);
     }
   });
@@ -667,6 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Tampilkan panel hasil
     resultBox.classList.remove('hidden');
+    state.hasMerged = true;
     
     // Sesuaikan antarmuka berdasarkan mode aktif
     if (state.activeMode === 'path-mode') {
