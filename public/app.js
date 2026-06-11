@@ -250,45 +250,58 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     dropzonesContainer.classList.remove('drag-over');
     const files = e.dataTransfer.files;
-    if (files.length >= 2) {
+    if (files.length > 0) {
       handleMultipleFiles(files);
     }
   });
 
   // ==========================================================================
-  // MULTIPLE FILES HANDLING
+  // MULTIPLE FILES HANDLING (Opsi B: Sistem Tambah)
   // ==========================================================================
   function handleMultipleFiles(files) {
-    const fileCount = files.length;
-    showToast(`Membaca ${fileCount} gambar...`, 'info');
-
-    // Menambah jumlah slot di state jika file yang di-drag lebih banyak dari slot saat ini
-    if (fileCount > state.images.length) {
-      const extraSlots = fileCount - state.images.length;
-      for (let i = 0; i < extraSlots; i++) {
-        state.images.push({ file: null, path: '', previewUrl: null, width: 0, height: 0, name: '' });
-      }
+    // Saring file gambar saja
+    const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length === 0) {
+      showToast('Tidak ada file gambar yang valid!', 'error');
+      return;
     }
 
-    // Load setiap file ke slot masing-masing
-    let loadPromises = Array.from(files).map((file, i) => {
-      return new Promise((resolve) => {
-        if (!file.type.startsWith('image/')) {
-          resolve(false);
-          return;
-        }
+    const fileCount = imageFiles.length;
+    showToast(`Membaca ${fileCount} gambar...`, 'info');
 
+    // Alokasikan target indeks secara sinkron untuk mencegah race condition
+    const targetIndices = [];
+    let tempImages = [...state.images];
+
+    imageFiles.forEach(() => {
+      let targetIndex = tempImages.findIndex(img => img.previewUrl === null);
+      if (targetIndex === -1) {
+        // Jika tidak ada slot kosong, buat slot baru di state.images dan tempImages
+        state.images.push({ file: null, path: '', previewUrl: null, width: 0, height: 0, name: '' });
+        tempImages.push({ file: null, path: '', previewUrl: null, width: 0, height: 0, name: '' });
+        targetIndex = state.images.length - 1;
+      }
+      // Tandai slot sebagai dipesan
+      tempImages[targetIndex] = { previewUrl: 'reserved' };
+      targetIndices.push(targetIndex);
+    });
+
+    // Jalankan pembacaan file berdasarkan target indeks yang telah dialokasikan
+    let loadPromises = imageFiles.map((file, i) => {
+      const targetIndex = targetIndices[i];
+      return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => {
           const img = new Image();
           img.onload = () => {
-            state.images[i] = {
+            state.images[targetIndex] = {
               file: file,
               name: file.name,
               previewUrl: e.target.result,
               width: img.width,
               height: img.height,
-              path: state.images[i].path || `C:\\images\\${file.name}`
+              path: state.images[targetIndex].path || `C:\\images\\${file.name}`
             };
             resolve(true);
           };
@@ -300,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     Promise.all(loadPromises).then(() => {
       renderUI();
-      showToast(`Berhasil mendistribusikan ${fileCount} gambar ke slot input.`, 'success');
+      showToast(`Berhasil menambahkan ${fileCount} gambar ke slot.`, 'success');
       
       // Auto scroll ke akhir kontainer agar user melihat box baru yang ditambahkan
       setTimeout(() => {
